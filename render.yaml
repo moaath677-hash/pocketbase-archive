@@ -1,0 +1,9 @@
+services:
+  - type: web
+    name: pocketbase-archive
+    env: docker
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: POCKETBASE_ENV
+        value: production
