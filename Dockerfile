@@ -1,14 +1,28 @@
-FROM alpine:latest
+# نحدد نسخة PocketBase اللي نبيها
+ARG PB_VERSION=0.33.0
 
-RUN apk update && apk add --no-cache curl unzip
+# صورة لينكس خفيفة
+FROM alpine:3.19
 
-WORKDIR /app
+# نثبت الأدوات اللي نحتاجها
+RUN apk add --no-cache ca-certificates wget unzip
 
-# تحميل PocketBase (إصدار 0.21.0 مثال، ويكفيك)
-RUN curl -L -o pb.zip https://github.com/pocketbase/pocketbase/releases/download/v0.21.0/pocketbase_0.21.0_linux_amd64.zip \
-    && unzip pb.zip \
-    && rm pb.zip
+# نحدد النسخة قبل باقي الأوامر
+ARG PB_VERSION
 
-EXPOSE 10000
+# نحمّل PocketBase (لينكس amd64) من GitHub الرسمي
+RUN wget -O /tmp/pocketbase.zip "https://github.com/pocketbase/pocketbase/releases/download/v${PB_VERSION}/pocketbase_${PB_VERSION}_linux_amd64.zip" \
+    && unzip /tmp/pocketbase.zip -d /pb \
+    && rm /tmp/pocketbase.zip \
+    && chmod +x /pb/pocketbase
 
-CMD ["./pocketbase", "serve", "--http=0.0.0.0:10000"]
+# مجلد البيانات (لو حاب تسوي له volume لاحقًا)
+RUN mkdir -p /pb/pb_data
+
+WORKDIR /pb
+
+# المنفذ الافتراضي لـ PocketBase
+EXPOSE 8090
+
+# أمر التشغيل
+CMD ["./pocketbase", "serve", "--http=0.0.0.0:8090", "--dir", "/pb/pb_data"]
